@@ -1,0 +1,729 @@
+<!doctype html>
+<html lang="uz">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<title>Masjidlar — Qur'on (Suralar · Qorilar · Saqlanganlar)</title>
+<meta name="description" content="Premium mobile-first Qur'on app — suralar, tarjima (uz.sodik), Alafasy audio, player, bookmarks." />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&family=Noto+Naskh+Arabic:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-light: linear-gradient(180deg,#f6fff9,#ecfff2);
+    --bg-dark: linear-gradient(180deg,#04120d,#061812);
+    --card-light: rgba(255,255,255,0.95);
+    --card-dark: rgba(6,18,14,0.85);
+    --accent: #07c77f;
+    --accent-2: #04a66a;
+    --muted: #6c8a7e;
+    --glass-blur: 14px;
+    --radius: 14px;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0;font-family:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,Arial;background:var(--bg-light);-webkit-font-smoothing:antialiased; color:#07221a;}
+  body[data-theme="dark"]{background:var(--bg-dark); color:#e6fbf2;}
+  .app{max-width:980px;margin:0 auto;padding:14px;min-height:100vh;display:flex;flex-direction:column;gap:12px}
+  header{display:flex;align-items:center;gap:12px;background:var(--card-light);padding:10px;border-radius:12px;box-shadow:0 12px 40px rgba(3,28,20,0.06)}
+  body[data-theme="dark"] header{background:var(--card-dark);box-shadow:0 12px 40px rgba(0,0,0,0.6)}
+  .logo{width:56px;height:56px;border-radius:12px;background:linear-gradient(135deg,var(--accent),var(--accent-2));display:grid;place-items:center;color:#fff;font-weight:900;font-size:20px}
+  .brand h1{margin:0;font-size:18px}
+  .brand p{margin:3px 0 0;color:var(--muted);font-size:13px}
+  .header-actions{margin-left:auto;display:flex;gap:8px;align-items:center}
+  .btn{padding:8px 12px;border-radius:999px;border:0;background:linear-gradient(90deg,var(--accent),var(--accent-2));color:#002016;font-weight:800;cursor:pointer;box-shadow:0 10px 30px rgba(4,140,80,0.12)}
+  .ghost{background:transparent;border:1px solid rgba(0,0,0,0.06);color:var(--muted);font-weight:700}
+  body[data-theme="dark"] .ghost{border:1px solid rgba(255,255,255,0.06); color:#cfeee4}
+  nav.tabs{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+  .tab{padding:8px 12px;border-radius:999px;border:1px solid rgba(0,0,0,0.04);background:transparent;color:var(--muted);font-weight:700;cursor:pointer}
+  .tab.active{background:linear-gradient(90deg,rgba(7,199,127,0.12),rgba(3,168,107,0.06));color:var(--accent);box-shadow:0 8px 26px rgba(3,168,107,0.06)}
+  main{display:grid;gap:12px;margin-top:6px}
+  .card{background:var(--card-light);padding:12px;border-radius:12px;box-shadow:0 12px 40px rgba(3,28,20,0.06)}
+  body[data-theme="dark"] .card{background:var(--card-dark);box-shadow:0 20px 60px rgba(0,0,0,0.6)}
+  /* Layout */
+  .layout{display:grid;grid-template-columns:1fr;gap:12px}
+  @media(min-width:920px){ .layout{grid-template-columns:1fr 360px} }
+  /* SURAH LIST */
+  .surah-list{display:grid;gap:6px;max-height:64vh;overflow:auto;padding-right:6px}
+  .surah-item{display:flex;align-items:center;gap:12px;padding:10px;border-radius:10px;cursor:pointer;border:1px solid rgba(0,0,0,0.03)}
+  body[data-theme="dark"] .surah-item{border:1px solid rgba(255,255,255,0.02)}
+  .surah-meta{display:flex;flex-direction:column}
+  .surah-name{font-weight:800}
+  .surah-sub{font-size:13px;color:var(--muted)}
+  .sura-num{min-width:40px;height:40px;border-radius:10px;background:linear-gradient(180deg,#fff,#f0fff6);display:grid;place-items:center;font-weight:900;color:var(--accent)}
+  body[data-theme="dark"] .sura-num{background:linear-gradient(180deg,#071816,#072318);color:#9ff3d4}
+  /* SURAH PAGE */
+  .ayah{padding:12px;border-radius:10px;margin-bottom:8px;background:linear-gradient(180deg,#fff,#fbfffd);border:1px solid rgba(2,60,34,0.03)}
+  body[data-theme="dark"] .ayah{background:linear-gradient(180deg,#071513,#071813);border:1px solid rgba(255,255,255,0.02)}
+  .ayah .arab{font-family:"Noto Naskh Arabic", serif;font-size:22px;direction:rtl;text-align:right}
+  .ayah .trans{font-size:14px;color:var(--muted);margin-top:6px}
+  .ayah .controls{display:flex;gap:8px;align-items:center;margin-top:8px}
+  .icon-btn{padding:8px;border-radius:10px;border:0;background:linear-gradient(180deg,#fff,#f6fff8);cursor:pointer}
+  body[data-theme="dark"] .icon-btn{background:linear-gradient(180deg,#071413,#081e17)}
+  .player-bar{position:fixed;left:50%;transform:translateX(-50%);bottom:12px;width:calc(100% - 28px);max-width:980px;border-radius:14px;background:rgba(255,255,255,0.95);backdrop-filter:blur(var(--glass-blur));display:flex;gap:12px;align-items:center;padding:8px 12px;box-shadow:0 20px 60px rgba(3,28,20,0.08)}
+  body[data-theme="dark"] .player-bar{background:rgba(6,18,14,0.85);box-shadow:0 30px 80px rgba(0,0,0,0.7);color:#dff9ed}
+  .pb-left{display:flex;gap:12px;align-items:center}
+  .pb-right{flex:1;display:flex;flex-direction:column;gap:6px}
+  .progress{height:6px;border-radius:999px;background:rgba(0,0,0,0.06);overflow:hidden}
+  .progress > i{display:block;height:100%;width:0%;background:linear-gradient(90deg,var(--accent),var(--accent-2));transition:width .12s linear}
+  .small{font-size:12px;color:var(--muted)}
+  /* Bookmarks list */
+  .bookmark-item{display:flex;justify-content:space-between;align-items:center;padding:8px;border-radius:10px;background:linear-gradient(180deg,#fff,#fbfffc);border:1px solid rgba(2,60,34,0.03);margin-bottom:8px}
+  body[data-theme="dark"] .bookmark-item{background:linear-gradient(180deg,#071413,#071813);border:1px solid rgba(255,255,255,0.02)}
+  /* loader */
+  .loader{display:grid;place-items:center;padding:30px;color:var(--muted)}
+  /* tiny helpers */
+  .muted{color:var(--muted)}
+  .row{display:flex;gap:8px;align-items:center}
+  .spacer{flex:1}
+  .glass-card{border-radius:12px;background:linear-gradient(180deg,rgba(255,255,255,0.6),rgba(255,255,255,0.4));backdrop-filter:blur(var(--glass-blur));padding:10px}
+  body[data-theme="dark"] .glass-card{background:linear-gradient(180deg,rgba(6,18,14,0.5),rgba(6,18,14,0.4))}
+  /* prevent horizontal scroll on mobile */
+  html,body{overflow-x:hidden}
+</style>
+</head>
+<body data-theme="dark">
+<div class="app" role="application" aria-label="Masjidlar Qur'on app">
+
+  <header>
+    <div class="logo" aria-hidden>🕋</div>
+    <div class="brand" role="banner">
+      <h1>Masjidlar — Qur'on</h1>
+      <p>Surahlar · Qorilar · Saqlanganlar</p>
+    </div>
+
+    <div class="header-actions" role="region" aria-label="Actions">
+      <button id="themeToggle" class="ghost" title="Toggle theme">Light</button>
+      <button id="refreshBtn" class="ghost" title="Yuklash">Yuklash</button>
+    </div>
+  </header>
+
+  <nav class="tabs" role="navigation" aria-label="Main tabs">
+    <button class="tab active" data-tab="surah">📖 Suralar</button>
+    <button class="tab" data-tab="qori">🎙 Qorilar</button>
+    <button class="tab" data-tab="saved">🤍 Saqlanganlar</button>
+  </nav>
+
+  <main>
+    <div class="layout">
+
+      <!-- LEFT: SURAH LIST + SURAH CONTENT -->
+      <section id="leftCol" aria-live="polite">
+
+        <!-- SURAH LIST CARD -->
+        <div id="surahListCard" class="card">
+          <div class="row" style="justify-content:space-between;align-items:center;margin-bottom:8px">
+            <div style="font-weight:900">Suralar</div>
+            <div class="muted small">Tarjima: uz.sodik · Audio: Alafasy</div>
+          </div>
+          <div id="surahList" class="surah-list" aria-label="Suralar ro'yxati">
+            <div class="loader">Suralar yuklanmoqda…</div>
+          </div>
+        </div>
+
+        <!-- SURAH CONTENT CARD (hidden until click) -->
+        <div id="surahCard" class="card" style="display:none;margin-top:12px">
+          <div style="display:flex;gap:8px;align-items:center;justify-content:space-between;margin-bottom:8px">
+            <div>
+              <button id="backToList" class="ghost">← Orqaga</button>
+              <div id="suraTitle" style="font-weight:900;margin-top:6px">Sura nomi</div>
+              <div id="suraMeta" class="muted small"></div>
+            </div>
+            <div style="text-align:right">
+              <div class="muted small">Rejim:</div>
+              <div style="margin-top:6px"><button id="playSura" class="btn">Suraning audio</button></div>
+            </div>
+          </div>
+
+          <div id="ayahContainer" style="max-height:58vh;overflow:auto;padding-right:6px"></div>
+        </div>
+
+      </section>
+
+      <!-- RIGHT: QORILAR / SAVED PREVIEW -->
+      <aside id="rightCol">
+
+        <!-- Qorilar card -->
+        <div id="qoriCard" class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <div style="font-weight:900">Qorilar</div>
+            <button id="switchQoriList" class="ghost small">Yangilash</button>
+          </div>
+          <div id="qoriList" style="max-height:60vh;overflow:auto" class="surah-list">
+            <div class="loader">Qorilar yuklanmoqda…</div>
+          </div>
+        </div>
+
+        <!-- Saqlanganlar preview -->
+        <div id="savedCard" class="card" style="margin-top:12px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <div style="font-weight:900">Saqlanganlar</div>
+            <div class="muted small">Uyda saqlangan oyatlar</div>
+          </div>
+          <div id="savedList" style="max-height:30vh;overflow:auto"></div>
+        </div>
+
+      </aside>
+
+    </div>
+  </main>
+
+  <!-- PLAYER (fixed bottom) -->
+  <div id="player" class="player-bar" style="display:none" role="region" aria-label="Audio player">
+    <div class="pb-left">
+      <div style="width:56px;height:56px;border-radius:10px;background:linear-gradient(180deg,#fff,#f6fff8);display:grid;place-items:center">
+        <div id="playerIcon">🎧</div>
+      </div>
+      <div style="min-width:160px">
+        <div id="playerTitle" style="font-weight:800">—</div>
+        <div id="playerSub" class="small muted">—</div>
+      </div>
+      <div class="spacer"></div>
+      <button id="prevBtn" class="ghost">⏮</button>
+      <button id="playPause" class="btn">▶</button>
+      <button id="nextBtn" class="ghost">⏭</button>
+    </div>
+    <div class="pb-right">
+      <div class="progress" aria-hidden><i id="progressFill" style="width:0%"></i></div>
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div id="timeLeft" class="small muted">00:00</div>
+        <div class="small muted">Ovoz: <span id="audioRate">1x</span></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* ==========================
+   Qur'on App — single file
+   - API: https://api.alquran.cloud
+   - Editions used: uz.sodik (translation), ar.alafasy (audio)
+   - Features: Surah list, open surah, show ayahs (arab + uz.sodik), play ayah audio, player with prev/next, bookmarks
+   ========================== */
+
+(function(){
+  // Config
+  const API_BASE = 'https://api.alquran.cloud/v1'; // if you need proxy, change here
+  const TRANSLATION_EDITION = 'uz.sodik';      // translation edition
+  const ARAB_EDITION = 'quran-uthmani'         // not used directly (we will fetch surah default Arabic)
+  const AUDIO_EDITION = 'ar.alafasy';          // audio edition (may require API support)
+
+  // DOM refs
+  const surahListEl = document.getElementById('surahList');
+  const surahCard = document.getElementById('surahCard');
+  const surahTitle = document.getElementById('suraTitle');
+  const suraMeta = document.getElementById('suraMeta');
+  const ayahContainer = document.getElementById('ayahContainer');
+  const backToList = document.getElementById('backToList');
+  const playSuraBtn = document.getElementById('playSura');
+
+  const qoriListEl = document.getElementById('qoriList');
+  const savedListEl = document.getElementById('savedList');
+  const savedCard = document.getElementById('savedCard');
+
+  const tabs = document.querySelectorAll('.tab');
+  const themeToggle = document.getElementById('themeToggle');
+  const refreshBtn = document.getElementById('refreshBtn');
+
+  // Player elements
+  const playerBar = document.getElementById('player');
+  const playPauseBtn = document.getElementById('playPause');
+  const prevBtn = document.getElementById('prevBtn');
+  const nextBtn = document.getElementById('nextBtn');
+  const playerTitle = document.getElementById('playerTitle');
+  const playerSub = document.getElementById('playerSub');
+  const progressFill = document.getElementById('progressFill');
+  const timeLeft = document.getElementById('timeLeft');
+  const audioRateEl = document.getElementById('audioRate');
+
+  // State
+  let surahs = []; // list of surahs metadata
+  let currentSurah = null; // object with ayahs
+  let currentAyahIndex = 0;
+  let audio = new Audio();
+  let isPlaying = false;
+  let playerQueue = []; // {surah:number, ayah: number, audio: url}
+  let bookmarks = {}; // saved by key "sura:ayah" -> {sura,ayah,text,translation}
+  const STORAGE_KEY = 'masjid_quran_v1';
+  const THEME_KEY = 'masjid_theme_quran';
+
+  // init
+  init();
+
+  function init(){
+    loadStorage();
+    bindUI();
+    loadSurahs();
+    loadQorilar();
+    renderBookmarks();
+    applyTheme();
+  }
+
+  // ---------------------------
+  // Storage
+  // ---------------------------
+  function loadStorage(){
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if(raw) {
+        const obj = JSON.parse(raw);
+        bookmarks = obj.bookmarks || {};
+      }
+      const theme = localStorage.getItem(THEME_KEY);
+      if(theme) document.body.setAttribute('data-theme', theme);
+    } catch(e){ console.warn('storage load err', e); }
+  }
+  function saveStorage(){
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ bookmarks }));
+    } catch(e){ console.warn('storage save err', e); }
+  }
+
+  // ---------------------------
+  // UI bindings
+  // ---------------------------
+  function bindUI(){
+    backToList.addEventListener('click', ()=> {
+      surahCard.style.display = 'none';
+      document.getElementById('surahListCard').style.display = '';
+      // scroll to top
+      surahListEl.scrollTop = 0;
+    });
+
+    // tabs
+    tabs.forEach(t=> t.addEventListener('click', ()=>{
+      tabs.forEach(x=>x.classList.remove('active'));
+      t.classList.add('active');
+      const page = t.dataset.tab;
+      if(page === 'surah'){
+        document.getElementById('surahListCard').style.display = '';
+        document.getElementById('surahCard').style.display = 'none';
+        // show qori & saved in aside
+        document.getElementById('qoriCard').style.display = '';
+        document.getElementById('savedCard').style.display = '';
+      } else if(page === 'qori'){
+        // show qori as main (we'll scroll)
+        document.getElementById('surahListCard').style.display = '';
+        document.getElementById('surahCard').style.display = 'none';
+        // highlight qori section visually
+        qoriListEl.scrollIntoView({behavior:'smooth'});
+      } else if(page === 'saved'){
+        // show saved list prominently: hide surah list and show saved list card
+        document.getElementById('surahListCard').style.display = '';
+        document.getElementById('surahCard').style.display = 'none';
+        savedListEl.scrollIntoView({behavior:'smooth'});
+      }
+    }));
+
+    themeToggle.addEventListener('click', ()=>{
+      const cur = document.body.getAttribute('data-theme') || 'dark';
+      const next = cur === 'dark' ? 'light' : 'dark';
+      document.body.setAttribute('data-theme', next);
+      themeToggle.textContent = next === 'dark' ? 'Light' : 'Dark';
+      localStorage.setItem(THEME_KEY, next);
+    });
+
+    refreshBtn.addEventListener('click', ()=> {
+      loadSurahs(true);
+      loadQorilar(true);
+    });
+
+    // player control
+    playPauseBtn.addEventListener('click', togglePlayPause);
+    prevBtn.addEventListener('click', playPrev);
+    nextBtn.addEventListener('click', playNext);
+
+    // audio events
+    audio.addEventListener('timeupdate', ()=>{
+      if(!audio.duration) return;
+      const pct = (audio.currentTime / audio.duration) * 100;
+      progressFill.style.width = pct + '%';
+      timeLeft.textContent = formatTime(audio.currentTime) + ' / ' + formatTime(audio.duration);
+    });
+    audio.addEventListener('ended', ()=>{
+      // autoplay next ayah in queue
+      playNext();
+    });
+
+    // keyboard small support
+    window.addEventListener('keydown', (e)=>{
+      if(e.key === ' '){
+        e.preventDefault();
+        togglePlayPause();
+      }
+    });
+  }
+
+  // ---------------------------
+  // API fetch helpers
+  // ---------------------------
+  async function apiGet(path){
+    const url = `${API_BASE}${path}`;
+    const res = await fetch(url);
+    if(!res.ok) throw new Error('API error ' + res.status);
+    const json = await res.json();
+    return json;
+  }
+
+  // ---------------------------
+  // Load surah list
+  // ---------------------------
+  async function loadSurahs(force=false){
+    surahListEl.innerHTML = '<div class="loader">Suralar yuklanmoqda…</div>';
+    try {
+      const json = await apiGet('/surah');
+      if(json && json.data){
+        surahs = json.data; // array of surah meta
+        renderSurahList();
+      } else {
+        surahListEl.innerHTML = '<div class="loader">Suralar topilmadi</div>';
+      }
+    } catch (e){
+      console.error(e);
+      surahListEl.innerHTML = '<div class="loader">Xatolik: ' + (e.message||'API') + '</div>';
+    }
+  }
+
+  function renderSurahList(){
+    surahListEl.innerHTML = '';
+    surahs.forEach(s => {
+      const item = document.createElement('div');
+      item.className = 'surah-item';
+      item.tabIndex = 0;
+      item.innerHTML = `
+        <div class="sura-num" aria-hidden>${s.number}</div>
+        <div class="surah-meta">
+          <div class="surah-name">${s.englishName} — ${s.name}</div>
+          <div class="surah-sub">${s.numberOfAyahs} oyat · ${s.revelationType}</div>
+        </div>
+      `;
+      item.addEventListener('click', ()=> openSurah(s.number));
+      item.addEventListener('keydown', e => { if(e.key==='Enter') openSurah(s.number); });
+      surahListEl.appendChild(item);
+    });
+  }
+
+  // ---------------------------
+  // Open Surah (fetch ayahs + translation)
+  // ---------------------------
+  async function openSurah(surahNumber){
+    // show card
+    document.getElementById('surahListCard').style.display = 'none';
+    surahCard.style.display = '';
+    surahTitle.textContent = 'Sura yuklanmoqda…';
+    ayahContainer.innerHTML = '<div class="loader">Sura ichidagi oyatlar yuklanmoqda…</div>';
+
+    try {
+      // fetch arabic + translation in one call: /v1/surah/{surah}/{edition}
+      // We'll first fetch Arabic default (no edition) to get ayahs array with text and audioPrimary maybe
+      const arabicResp = await apiGet('/surah/' + surahNumber);
+      // fetch translation (uz.sodik) separately
+      const transResp = await apiGet('/surah/' + surahNumber + '/' + TRANSLATION_EDITION);
+
+      // Compose ayahs combined
+      const arabData = arabicResp && arabicResp.data;
+      const transData = transResp && transResp.data;
+
+      currentSurah = {
+        meta: arabData ? { number: arabData.number, name: arabData.englishName, arabicName: arabData.name, ayahsCount: arabData.numberOfAyahs, revelation: arabData.revelationType } : null,
+        ayahs: [] // {numberInSurah, text, translation, number, audio}
+      };
+
+      // arr of ayahs in arabData.ayahs and transData.ayahs
+      const arabAyahs = (arabData && arabData.ayahs) || [];
+      const transAyahs = (transData && transData.ayahs) || [];
+
+      for(let i=0;i<arabAyahs.length;i++){
+        const a = arabAyahs[i];
+        const t = transAyahs[i] || {};
+        // audio url attempt: API sometimes provides audio in ayah.audio
+        let audioUrl = a.audio || (a?.audioSecondary && a.audioSecondary[0]) || null;
+        // fallback: try Alafasy endpoint for each ayah -> /ayah/{number}/ar.alafasy
+        // We'll set audio to null for now and attempt to fetch ayah audio lazily when play requested.
+        currentSurah.ayahs.push({
+          numberInSurah: a.numberInSurah,
+          text: a.text,
+          translation: t.text || '',
+          number: a.number,  // global ayah number
+          audio: audioUrl // may be null
+        });
+      }
+
+      // render meta + ayahs
+      surahTitle.textContent = `${currentSurah.meta.englishName} — ${currentSurah.meta.arabicName}`;
+      suraMeta.textContent = `${currentSurah.meta.ayahsCount} oyat · ${currentSurah.meta.revelation}`;
+      renderAyahs(currentSurah.ayahs);
+
+    } catch (e){
+      console.error(e);
+      ayahContainer.innerHTML = '<div class="loader">Sura yuklashda xatolik: ' + (e.message||'') + '</div>';
+    }
+  }
+
+  // render ayahs list inside current surah
+  function renderAyahs(ayahs){
+    ayahContainer.innerHTML = '';
+    ayahs.forEach((ay, idx) => {
+      const el = document.createElement('div');
+      el.className = 'ayah';
+      el.innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div style="font-weight:800">Oyat ${ay.numberInSurah}</div>
+          <div class="row">
+            <button class="icon-btn" data-action="play" data-idx="${idx}" title="Play ayah">▶</button>
+            <button class="icon-btn" data-action="save" data-idx="${idx}" title="Saqlash">💾</button>
+            <button class="icon-btn" data-action="share" data-idx="${idx}" title="Ulashish">🔗</button>
+          </div>
+        </div>
+        <div class="arab" aria-label="arabic">${ay.text}</div>
+        <div class="trans">${ay.translation}</div>
+      `;
+      // event delegation for play/save/share
+      const playBtn = el.querySelector('[data-action="play"]');
+      playBtn.addEventListener('click', async (ev)=>{
+        await playAyahByIndex(idx, ev);
+      });
+      const saveBtn = el.querySelector('[data-action="save"]');
+      saveBtn.addEventListener('click', ()=>{
+        toggleBookmark(ay);
+        renderBookmarks();
+      });
+      const shareBtn = el.querySelector('[data-action="share"]');
+      shareBtn.addEventListener('click', ()=>{
+        const text = `${currentSurah.meta.englishName} : ${ay.numberInSurah}\n${ay.text}\n\n${ay.translation}`;
+        if(navigator.share) navigator.share({title:'Qur\'on — oyat', text});
+        else prompt('Nusxa olish uchun:', text);
+      });
+
+      ayahContainer.appendChild(el);
+    });
+  }
+
+  // ---------------------------
+  // BOOKMARKS
+  // ---------------------------
+  function toggleBookmark(ay){
+    const key = `${(currentSurah.meta.number||'')}:${ay.numberInSurah}`;
+    if(bookmarks[key]) {
+      delete bookmarks[key];
+    } else {
+      bookmarks[key] = {
+        suraNumber: currentSurah.meta.number,
+        suraName: currentSurah.meta.englishName,
+        ayah: ay.numberInSurah,
+        arab: ay.text,
+        trans: ay.translation,
+        timestamp: Date.now()
+      };
+    }
+    saveStorage();
+  }
+  function renderBookmarks(){
+    savedListEl.innerHTML = '';
+    const keys = Object.keys(bookmarks).sort((a,b)=> bookmarks[b].timestamp - bookmarks[a].timestamp);
+    if(keys.length === 0){
+      savedListEl.innerHTML = '<div class="muted small">Hech narsa saqlanmagan</div>';
+      return;
+    }
+    keys.forEach(k=>{
+      const b = bookmarks[k];
+      const el = document.createElement('div');
+      el.className = 'bookmark-item';
+      el.innerHTML = `
+        <div>
+          <div style="font-weight:800">${b.suraName} · ${b.ayah}</div>
+          <div class="muted small">${b.trans}</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <button class="ghost small" data-action="open" data-key="${k}">Ochish</button>
+          <button class="ghost small" data-action="del" data-key="${k}">O'chirish</button>
+        </div>
+      `;
+      el.querySelector('[data-action="open"]').addEventListener('click', ()=>{
+        // open surah and scroll to ayah
+        const [snum, anum] = k.split(':').map(Number);
+        openSurah(snum).then(()=> {
+          // scroll after slight delay
+          setTimeout(()=> {
+            const target = Array.from(ayahContainer.children).find(c=> c.querySelector('.ayat') && false);
+            // search by oyat number via text content
+            const idx = Array.from(ayahContainer.children).findIndex(ch => {
+              const t = ch.querySelector('.ayah .arab') || ch.querySelector('.arab');
+              return ch.innerText.includes('Oyat ' + anum);
+            });
+            // simpler: find child with header that has "Oyat anum"
+            const headerIndex = Array.from(ayahContainer.children).findIndex(ch => ch.querySelector && ch.querySelector('div') && ch.querySelector('div').innerText.includes('Oyat ' + anum));
+            if(headerIndex >= 0){
+              const node = ayahContainer.children[headerIndex];
+              node.scrollIntoView({behavior:'smooth', block:'center'});
+            }
+          }, 240);
+        });
+      });
+      el.querySelector('[data-action="del"]').addEventListener('click', ()=>{
+        delete bookmarks[k];
+        saveStorage();
+        renderBookmarks();
+      });
+      savedListEl.appendChild(el);
+    });
+  }
+
+  // ---------------------------
+  // QORILAR: fetch list & render
+  // ---------------------------
+  async function loadQorilar(force=false){
+    qoriListEl.innerHTML = '<div class="loader">Qorilar yuklanmoqda…</div>';
+    try {
+      // AlQuran Cloud supports /edition endpoints; but there isn't a stable "list of reciters" endpoint.
+      // We'll show a curated list for demo (Alafasy + others). If you have API for reciters, replace here.
+      const reciters = [
+        { id:'alafasy', name:'Mishary Rashid Alafasy', audioPrefix: 'https://www.everyayah.com/data/Alafasy_64kbps/' },
+        { id:'saad_alghamdi', name:'Saad Al-Ghamdi', audioPrefix: 'https://example.com/saad/' },
+        { id:'abdulbasit', name:'Abdul Basit', audioPrefix: 'https://example.com/abdul/' }
+      ];
+      qoriListEl.innerHTML = '';
+      reciters.forEach(r=>{
+        const el = document.createElement('div');
+        el.className = 'surah-item';
+        el.innerHTML = `<div style="width:44px;height:44px;border-radius:10px;background:linear-gradient(90deg,#fff,#f6fff8);display:grid;place-items:center;font-weight:900;color:var(--accent)">${r.name.split(' ')[0].slice(0,2)}</div>
+          <div class="surah-meta"><div style="font-weight:800">${r.name}</div><div class="surah-sub small">Audio manbasi</div></div>
+          <div style="margin-left:auto"><button class="btn" data-rec="${r.id}">Ko'rish</button></div>
+        `;
+        el.querySelector('button').addEventListener('click', () => openReciter(r.id));
+        qoriListEl.appendChild(el);
+      });
+    } catch(e){
+      console.error(e);
+      qoriListEl.innerHTML = '<div class="loader">Qorilar yuklashda xato</div>';
+    }
+  }
+
+  function openReciter(reciterId){
+    // For demo, we will set audio edition to ar.alafasy if reciterId == 'alafasy'
+    if(reciterId === 'alafasy'){
+      // set AUDIO_EDITION-driven behavior
+      alert('Alafasy qori tanlandi. Suralarni ochib, oyatni play bosing — audio o‘ynaydi (agar API audio taqdim etsa).');
+      // We can also redirect to Suralar tab
+      document.querySelector('.tab[data-tab="surah"]').click();
+    } else {
+      alert('Bu demo uchun faqat Alafasy ichki playerga moslashgan. Boshqa qori audio qo‘llab-quvvatlashi uchun manbani sozlash kerak.');
+    }
+  }
+
+  // ---------------------------
+  // Audio handling: play ayah by index
+  // ---------------------------
+  async function playAyahByIndex(index, event=null){
+    if(!currentSurah) return;
+    const ay = currentSurah.ayahs[index];
+    // try to get audio url: if ay.audio available use it; else attempt fetch /ayah/{number}/ar.alafasy
+    let url = ay.audio || null;
+    if(!url){
+      // attempt fetching from alquran.cloud ayah endpoint for audio edition
+      try {
+        const res = await apiGet('/ayah/' + ay.number + '/' + AUDIO_EDITION);
+        if(res && res.data && res.data.audio) url = res.data.audio;
+      } catch(e){
+        // ignore
+        // console.warn('audio fetch failed', e);
+      }
+    }
+    if(!url){
+      alert('Bu oyat uchun audio topilmadi (API manbada mavjud emas).');
+      return;
+    }
+    // set queue to current surah starting at this index
+    playerQueue = currentSurah.ayahs.map((a, i)=> ({ surah: currentSurah.meta.number, index:i, audio: a.audio || null, ayNumber: a.number }));
+    currentAyahIndex = index;
+    startPlayback(url, {fromEvent: event});
+  }
+
+  function startPlayback(url, info={}){
+    if(!url) return;
+    audio.src = url;
+    audio.play().then(()=>{
+      isPlaying = true;
+      updatePlayerUI();
+    }).catch(err=>{
+      console.warn('playback err', err);
+      alert('Audio o‘ynatishda muammo: ko‘rib chiqish rejimi / CORS cheklov bo‘lishi mumkin. Local serverda sinang.');
+    });
+    // show player bar
+    playerBar.style.display = '';
+    // update title
+    const sname = currentSurah.meta ? currentSurah.meta.englishName : '—';
+    playerTitle.textContent = `${sname} · Oyat ${currentAyahIndex+1}`;
+    playerSub.textContent = currentSurah.ayahs[currentAyahIndex].translation.slice(0,80);
+  }
+
+  function togglePlayPause(){
+    if(!audio.src) return;
+    if(isPlaying){
+      audio.pause(); isPlaying = false;
+    } else {
+      audio.play().then(()=> isPlaying = true).catch(()=> {});
+    }
+    updatePlayerUI();
+  }
+  function updatePlayerUI(){
+    playPauseBtn.textContent = isPlaying ? '⏸' : '▶';
+  }
+  function playNext(){
+    if(!playerQueue || playerQueue.length===0) return;
+    currentAyahIndex = Math.min(currentAyahIndex+1, playerQueue.length-1);
+    const it = playerQueue[currentAyahIndex];
+    // attempt to fetch audio if absent
+    ensureAudioForAyah(it).then(url=>{
+      if(url){ startPlayback(url); }
+    });
+  }
+  function playPrev(){
+    if(!playerQueue || playerQueue.length===0) return;
+    currentAyahIndex = Math.max(currentAyahIndex-1, 0);
+    const it = playerQueue[currentAyahIndex];
+    ensureAudioForAyah(it).then(url=>{
+      if(url) startPlayback(url);
+    });
+  }
+
+  async function ensureAudioForAyah(item){
+    // item: {surah, index, audio, ayNumber}
+    const ay = currentSurah.ayahs[item.index];
+    if(ay.audio) return ay.audio;
+    try {
+      const res = await apiGet('/ayah/' + ay.number + '/' + AUDIO_EDITION);
+      if(res && res.data && res.data.audio){
+        ay.audio = res.data.audio;
+        return ay.audio;
+      }
+    } catch(e){
+      console.warn('ensureAudio err', e);
+    }
+    return null;
+  }
+
+  // ---------------------------
+  // helpers & utilities
+  // ---------------------------
+  function formatTime(s){
+    if(!s && s !== 0) return '00:00';
+    s = Math.floor(s);
+    const m = Math.floor(s/60).toString().padStart(2,'0');
+    const sec = (s%60).toString().padStart(2,'0');
+    return `${m}:${sec}`;
+  }
+
+  // ---------------------------
+  // Rendering helpers
+  // ---------------------------
+  // When a surah is opened, a class of play/save buttons etc is added; but we need to scroll to specific ayah if required.
+  // The play buttons call playAyahByIndex and will attempt to fetch audio lazily.
+
+  // ---------------------------
+  // Accessibility / small touches
+  // ---------------------------
+  // Nothing heavy here, but ensure player accessible.
+
+})();
+</script>
+</body>
+</html>
